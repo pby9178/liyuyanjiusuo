@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="礼遇盲盒 - 玩转你的社交。情侣款&朋友款盲盒，9.9/19.9/29.9三种价格，让每一份礼物都成为惊喜。">
+    <title>礼遇盲盒 · 玩转你的社交</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <style>
+        :root {
+            --primary-blue: #AEDCF5;
+            --primary-blue-light: #E3F4FC;
+            --primary-pink: #F9C6D8;
+            --primary-pink-light: #FDEBF2;
+            --accent-yellow: #FFE8A3;
+            --text-main: #4A5568;
+            --text-light: #8A9BB0;
+            --radius-card: 1.5rem;
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "STXinwei", "华文新魏", "Noto Serif SC", "PingFang SC", "Microsoft YaHei", serif;
+            color: var(--text-main);
+            background: linear-gradient(180deg, var(--primary-blue-light) 0%, #ffffff 30%);
+            margin: 0;
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+
+        .card {
+            border-radius: var(--radius-card);
+        }
+
+        .btn-pink {
+            background: var(--primary-pink);
+            color: #fff;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            font-family: inherit;
+        }
+        .btn-pink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(249, 198, 216, 0.6);
+        }
+        .btn-pink:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(249, 198, 216, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-blue);
+            color: var(--text-main);
+            transition: all 0.25s ease;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-outline:hover {
+            background: var(--primary-blue-light);
+            border-color: var(--primary-pink);
+        }
+
+        .product-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-8px) rotate(-1deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .badge-tag {
+            background: var(--accent-yellow);
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* 飞入购物车动画 */
+        .fly-ball {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-pink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* 弹窗遮罩 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(40px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            animation: slideUp 0.4s ease;
+        }
+
+        /* 星星评价 */
+        .star {
+            color: #FFD700;
+            font-size: 1.2rem;
+        }
+        .star-empty {
+            color: #ddd;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 999px;
+            z-index: 999;
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+            .product-card:hover {
+                transform: translateY(-4px) rotate(0);
+            }
+        }
+    </style>
+</head>
+<body class="w-full">
+
+    <!-- ===== Toast 提示容器 ===== -->
+    <div id="toastContainer"></div>
+
+    <!-- ===== 优惠券弹窗 ===== -->
+    <div id="couponModal" class="modal-overlay hidden">
+        <div class="modal-content card bg-white p-8 mx-4 max-w-md w-full text-center relative">
+            <button onclick="closeCouponModal()" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-gray-600 transition">&times;</button>
+            <div class="text-5xl mb-4">🧧</div>
+            <h2 class="text-2xl font-bold mb-2">关注店铺 · 领专属券</h2>
+            <p class="text-gray-500 mb-6">首次关注即可领取 <span class="text-[var(--primary-pink)] font-bold text-xl">3元无门槛券</span></p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="claimCoupon()" class="btn-pink card px-8 py-3 text-lg font-semibold">🎫 立即领取</button>
+            </div>
+            <p class="text-xs text-gray-400 mt-4">限时优惠，每人限领一张</p>
+        </div>
+    </div>
+
+    <!-- ===== 导航栏 ===== -->
+    <nav class="sticky top-0 z-50 backdrop-blur bg-white/75 border-b border-[var(--primary-blue)] shadow-sm">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+            <a href="#" class="flex items-center gap-2 text-xl font-bold no-underline text-[var(--text-main)]">
+                <span class="w-9 h-9 card flex items-center justify-center" style="background:var(--primary-pink)">🎁</span>
+                礼遇盲盒
+            </a>
+            <div class="hidden md:flex gap-6 text-lg">
+                <a href="#products" class="no-underline text-[var(--text-main)] hover:text-[var(--primary-pink)] transition">盲盒商店</a>
+                <a href="#promo" class="no-underline text-[var(--text-main)] hover:text-[var(--primary-pink)] transition">促销活动</a>
+                <a href="#reviews" class="no-underline text-[var(--text-main)] hover:text-[var(--primary-pink)] transition">买家评价</a>
+                <a href="#story" class="no-underline text-[var(--text-main)] hover:text-[var(--primary-pink)] transition">品牌故事</a>
+            </div>
+            <button id="cartBtn" class="btn-pink card px-4 py-1.5 text-lg relative" aria-label="购物车">
+                🛒 购物车
+                <span id="cartCount" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white text-[var(--primary-pink)] text-xs rounded-full flex items-center justify-center font-bold shadow hidden">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== 标语横幅 ===== -->
+    <div class="text-center py-4 text-lg md:text-2xl px-4" style="background:var(--primary-pink-light)">
+        ✨ 还在为不知道送什么礼物而发愁吗？选择<span class="text-[var(--primary-pink)] font-bold">礼遇盲盒</span>，玩转你的社交！✨
+    </div>
+
+    <!-- ===== 轮播图 ===== -->
+    <section class="max-w-6xl mx-auto mt-6 px-4">
+        <div id="carousel" class="card overflow-hidden relative h-48 sm:h-56 md:h-72 lg:h-80 shadow-md cursor-grab active:cursor-grabbing">
+            <div id="slides" class="flex h-full transition-transform duration-500 ease-out"></div>
+            <button onclick="moveSlide(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 card bg-white/85 text-2xl flex items-center justify-center shadow hover:bg-white transition z-10" aria-label="上一张">‹</button>
+            <button onclick="moveSlide(1)" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 card bg-white/85 text-2xl flex items-center justify-center shadow hover:bg-white transition z-10" aria-label="下一张">›</button>
+            <div id="dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10"></div>
+        </div>
+    </section>
+
+    <!-- ===== 商品展示区 ===== -->
+    <section id="products" class="max-w-6xl mx-auto mt-10 px-4">
+        <h2 class="text-2xl md:text-3xl text-center mb-2">💝 我们的盲盒家族</h2>
+        <p class="text-center text-[var(--text-light)] mb-8">情侣款 & 朋友款 · 三种价格三种心意</p>
+        <div class="flex justify-center gap-3 mb-8 flex-wrap">
+            <button class="filter-btn btn-pink card px-5 py-2 text-sm md:text-base" data-filter="all">全部</button>
+            <button class="filter-btn btn-outline card px-5 py-2 text-sm md:text-base" data-filter="couple">💗 情侣款</button>
+            <button class="filter-btn btn-outline card px-5 py-2 text-sm md:text-base" data-filter="friend">🤝 朋友款</button>
+        </div>
+        <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 骨架屏（初始显示，JS渲染后替换） -->
+        </div>
+    </section>
+
+    <!-- ===== 促销活动 ===== -->
+    <section id="promo" class="max-w-6xl mx-auto mt-12 px-4">
+        <h2 class="text-2xl md:text-3xl text-center mb-8">🎉 限时促销</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card p-6 text-center shadow-sm hover:shadow-md transition" style="background:var(--primary-pink-light)">
+                <div class="text-4xl mb-3">💕</div>
+                <h3 class="text-xl font-bold mb-2">情侣二人同行</h3>
+                <p class="text-[var(--text-light)]">两盒同买，立减 <strong>5</strong> 元，甜蜜加倍～</p>
+                <span class="badge-tag text-xs px-3 py-1 inline-block mt-3">进行中</span>
+            </div>
+            <div class="card p-6 text-center shadow-sm hover:shadow-md transition" style="background:var(--primary-blue-light)">
+                <div class="text-4xl mb-3">🎂</div>
+                <h3 class="text-xl font-bold mb-2">生日月专属</h3>
+                <p class="text-[var(--text-light)]">生日当月下单，随机附赠<strong>隐藏款徽章</strong>！</p>
+                <span class="badge-tag text-xs px-3 py-1 inline-block mt-3">长期有效</span>
+            </div>
+            <div class="card p-6 text-center shadow-sm hover:shadow-md transition" style="background:var(--accent-yellow)">
+                <div class="text-4xl mb-3">🎊</div>
+                <h3 class="text-xl font-bold mb-2">开盒晒单</h3>
+                <p class="text-[var(--text-light)]">晒图发圈，返 <strong>3</strong> 元券，好物一起分享！</p>
+                <span class="badge-tag text-xs px-3 py-1 inline-block mt-3">热门</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 用户评价区（新增） ===== -->
+    <section id="reviews" class="max-w-6xl mx-auto mt-12 px-4">
+        <h2 class="text-2xl md:text-3xl text-center mb-2">💬 买家秀</h2>
+        <p class="text-center text-[var(--text-light)] mb-8">真实评价 · 开盒惊喜</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="reviewsGrid"></div>
+    </section>
+
+    <!-- ===== 品牌故事 ===== -->
+    <section id="story" class="max-w-6xl mx-auto mt-12 px-4">
+        <div class="card p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center shadow-sm" style="background:var(--primary-blue-light)">
+            <div>
+                <h2 class="text-2xl md:text-3xl mb-4">🌱 品牌故事</h2>
+                <p class="leading-relaxed mb-3">礼遇盲盒诞生于大学宿舍的一场头脑风暴：为什么送礼物总是那么难？我们相信，礼物最重要的不是贵，而是拆开那一刻的惊喜与心意。</p>
+                <p class="leading-relaxed">于是我们设计了「情侣款」和「朋友款」盲盒——9.9 的小小心意、19.9 的暖心陪伴、29.9 的重磅惊喜。让每一份礼物，都成为社交里的小确幸。</p>
+                <div class="flex gap-3 mt-6">
+                    <span class="badge-tag px-4 py-1 text-sm">🎓 大学生创业</span>
+                    <span class="badge-tag px-4 py-1 text-sm">💡 原创设计</span>
+                    <span class="badge-tag px-4 py-1 text-sm">📦 用心包装</span>
+                </div>
+            </div>
+            <img src="https://placehold.co/500x320/AEDCF5/ffffff?text=我们的故事" class="card w-full object-cover shadow" alt="礼遇盲盒品牌故事 - 宿舍创业团队照片" loading="lazy">
+        </div>
+    </section>
+
+    <!-- ===== 页脚 ===== -->
+    <footer class="mt-12 py-8 text-center text-[var(--text-light)]" style="background:var(--primary-pink-light)">
+        <p class="text-xl mb-2 text-[var(--text-main)] font-bold">🎁 礼遇盲盒 · 玩转你的社交 🎁</p>
+        <div class="flex justify-center gap-6 mb-3 text-sm">
+            <a href="#" class="no-underline text-[var(--text-light)] hover:text-[var(--primary-pink)] transition">微信</a>
+            <a href="#" class="no-underline text-[var(--text-light)] hover:text-[var(--primary-pink)] transition">小红书</a>
+            <a href="#" class="no-underline text-[var(--text-light)] hover:text-[var(--primary-pink)] transition">抖音</a>
+            <a href="#" class="no-underline text-[var(--text-light)] hover:text-[var(--primary-pink)] transition">微博</a>
+        </div>
+        <p class="text-sm">© 2026 礼遇盲盒 · 用心装好每一份惊喜</p>
+    </footer>
+
+    <script>
+        // ===== 全局状态 =====
+        let cartCount = 0;
+        let couponClaimed = false;
+
+        // ===== 商品数据 =====
+        const products = [
+            { id: 1, name: "心动小盒 · 情侣款", type: "couple", price: "9.9", size: "小", img: "https://placehold.co/400x400/F9C6D8/ffffff?text=情侣款·小", tag: "入门甜" },
+            { id: 2, name: "怦然中盒 · 情侣款", type: "couple", price: "19.9", size: "中", img: "https://placehold.co/400x400/F9C6D8/ffffff?text=情侣款·中", tag: "人气王" },
+            { id: 3, name: "挚爱大盒 · 情侣款", type: "couple", price: "29.9", size: "大", img: "https://placehold.co/400x400/F9C6D8/ffffff?text=情侣款·大", tag: "重磅惊喜" },
+            { id: 4, name: "友谊小盒 · 朋友款", type: "friend", price: "9.9", size: "小", img: "https://placehold.co/400x400/AEDCF5/ffffff?text=朋友款·小", tag: "随手礼" },
+            { id: 5, name: "默契中盒 · 朋友款", type: "friend", price: "19.9", size: "中", img: "https://placehold.co/400x400/AEDCF5/ffffff?text=朋友款·中", tag: "热卖中" },
+            { id: 6, name: "挚友大盒 · 朋友款", type: "friend", price: "29.9", size: "大", img: "https://placehold.co/400x400/AEDCF5/ffffff?text=朋友款·大", tag: "友谊满格" },
+        ];
+
+        const typeColor = { couple: "var(--primary-pink-light)", friend: "var(--primary-blue-light)" };
+        let currentFilter = "all";
+
+        // ===== 骨架屏渲染 =====
+        function renderSkeleton() {
+            const grid = document.getElementById("productGrid");
+            grid.innerHTML = Array(6).fill(null).map(() => `
+              <div class="card bg-white shadow-md overflow-hidden">
+                <div class="skeleton w-full aspect-square"></div>
+                <div class="p-4 space-y-3">
+                  <div class="skeleton h-5 w-16 rounded-full"></div>
+                  <div class="skeleton h-5 w-3/4 rounded"></div>
+                  <div class="skeleton h-4 w-1/2 rounded"></div>
+                  <div class="flex justify-between items-center">
+                    <div class="skeleton h-6 w-14 rounded"></div>
+                    <div class="skeleton h-9 w-24 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            `).join("");
+        }
+
+        // ===== 商品渲染 =====
+        function renderProducts() {
+            const grid = document.getElementById("productGrid");
+            const filtered = products.filter(p => currentFilter === "all" || p.type === currentFilter);
+            grid.innerHTML = filtered.map(p => `
+              <div class="product-card card bg-white shadow-md overflow-hidden" style="background:${typeColor[p.type]}">
+                <div class="bg-white relative overflow-hidden">
+                  <img src="${p.img}" alt="${p.name} - ${p.type==='couple'?'情侣':'朋友'}款盲盒 ¥${p.price}" class="w-full aspect-square object-cover" loading="lazy">
+                  <div class="absolute top-2 right-2 bg-white/90 card text-xs px-2 py-0.5 font-bold text-[var(--primary-pink)]">${p.size}包装</div>
+                </div>
+                <div class="p-4">
+                  <span class="badge-tag text-sm px-3 py-0.5 inline-block mb-2">${p.tag}</span>
+                  <h3 class="text-lg font-bold mb-1">${p.name}</h3>
+                  <p class="text-sm text-[var(--text-light)] mb-3">适合${p.type==='couple'?'恋人':'好友'} · 惊喜满满</p>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xl font-bold" style="color:var(--primary-pink)">¥${p.price}</span>
+                    <button class="btn-pink card px-4 py-1.5 text-sm add-to-cart" data-id="${p.id}" data-name="${p.name}">加入购物车</button>
+                  </div>
+                </div>
+              </div>
+            `).join("");
+
+            // 绑定加入购物车事件
+            grid.querySelectorAll('.add-to-cart').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const productName = this.dataset.name;
+                    const rect = this.getBoundingClientRect();
+                    addToCart(productName, rect);
+                });
+            });
+        }
+
+        // ===== 飞入购物车动画 =====
+        function addToCart(productName, btnRect) {
+            // 创建飞行小球
+            const ball = document.createElement('div');
+            ball.className = 'fly-ball';
+            ball.style.left = btnRect.left + btnRect.width / 2 - 10 + 'px';
+            ball.style.top = btnRect.top + btnRect.height / 2 - 10 + 'px';
+            document.body.appendChild(ball);
+
+            // 获取购物车按钮位置
+            const cartBtn = document.getElementById('cartBtn');
+            const cartRect = cartBtn.getBoundingClientRect();
+            const targetX = cartRect.left + cartRect.width / 2 - 10;
+            const targetY = cartRect.top + cartRect.height / 2 - 10;
+
+            // 触发动画
+            requestAnimationFrame(() => {
+                ball.style.transform = `translate(${targetX - parseFloat(ball.style.left)}px, ${targetY - parseFloat(ball.style.top)}px) scale(0.3)`;
+                ball.style.opacity = '0.6';
+            });
+
+            // 动画结束后更新购物车
+            ball.addEventListener('transitionend', () => {
+                ball.remove();
+                cartCount++;
+                updateCartBadge();
+                showToast(`已加入购物车：${productName} 🎉`);
+            });
+        }
+
+        // ===== 更新购物车徽标 =====
+        function updateCartBadge() {
+            const badge = document.getElementById('cartCount');
+            badge.textContent = cartCount;
+            if (cartCount > 0) {
+                badge.classList.remove('hidden');
+                badge.style.animation = 'none';
+                badge.offsetHeight;
+                badge.style.animation = 'slideUp 0.3s ease';
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // ===== Toast 提示 =====
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        // ===== 优惠券弹窗 =====
+        function showCouponModal() {
+            if (couponClaimed) return;
+            // 延迟3秒弹出，避免一进页面就弹
+            setTimeout(() => {
+                if (!couponClaimed) {
+                    document.getElementById('couponModal').classList.remove('hidden');
+                }
+            }, 3000);
+        }
+
+        function closeCouponModal() {
+            document.getElementById('couponModal').classList.add('hidden');
+        }
+
+        function claimCoupon() {
+            couponClaimed = true;
+            document.getElementById('couponModal').classList.add('hidden');
+            showToast('🧧 3元无门槛券已到账！下单自动抵扣～');
+            // 存储到 localStorage，刷新后不再弹出
+            localStorage.setItem('couponClaimed', 'true');
+        }
+
+        // 点击遮罩关闭弹窗
+        document.getElementById('couponModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCouponModal();
+        });
+
+        // ===== 筛选按钮 =====
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentFilter = btn.dataset.filter;
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('btn-pink');
+                    b.classList.add('btn-outline');
+                });
+                btn.classList.add('btn-pink');
+                btn.classList.remove('btn-outline');
+                renderProducts();
+            });
+        });
+
+        // ===== 轮播图 =====
+        const slides = [
+            { img: "https://placehold.co/1200x400/AEDCF5/ffffff?text=新品上市·情侣款盲盒", alt: "新品上市 - 情侣款盲盒" },
+            { img: "https://placehold.co/1200x400/F9C6D8/ffffff?text=朋友款盲盒·一起拆惊喜", alt: "朋友款盲盒 - 一起拆惊喜" },
+            { img: "https://placehold.co/1200x400/FFE8A3/ffffff?text=限时促销·两盒立减5元", alt: "限时促销 - 两盒立减5元" },
+        ];
+
+        const slidesEl = document.getElementById('slides');
+        const dotsEl = document.getElementById('dots');
+        const carousel = document.getElementById('carousel');
+
+        slidesEl.innerHTML = slides.map(s => `
+          <img src="${s.img}" alt="${s.alt}" class="w-full h-full object-cover shrink-0" loading="eager">
+        `).join("");
+
+        dotsEl.innerHTML = slides.map((_, i) => `
+          <button onclick="goSlide(${i})" class="dot w-3 h-3 rounded-full bg-white/60 transition-all duration-300 hover:bg-white" aria-label="切换到第${i+1}张"></button>
+        `).join("");
+
+        let idx = 0;
+        let autoplayInterval;
+
+        function goSlide(i) {
+            idx = (i + slides.length) % slides.length;
+            slidesEl.style.transform = `translateX(-${idx * 100}%)`;
+            document.querySelectorAll('.dot').forEach((d, j) => {
+                d.style.background = j === idx ? '#fff' : 'rgba(255,255,255,.6)';
+                d.style.width = j === idx ? '1.5rem' : '0.75rem';
+            });
+        }
+
+        function moveSlide(step) {
+            goSlide(idx + step);
+            resetAutoplay();
+        }
+
+        function resetAutoplay() {
+            clearInterval(autoplayInterval);
+            autoplayInterval = setInterval(() => moveSlide(1), 4000);
+        }
+
+        // 触摸滑动支持
+        let touchStartX = 0;
+        carousel.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        carousel.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) {
+                moveSlide(diff > 0 ? 1 : -1);
+            }
+        });
+
+        goSlide(0);
+        autoplayInterval = setInterval(() => moveSlide(1), 4000);
+
+        // ===== 用户评价数据 =====
+        const reviews = [
+            { name: "小雨", avatar: "💗", rating: 5, text: "男朋友收到挚爱大盒超惊喜！里面的小礼物都好用心，包装也超美，回购！", product: "挚爱大盒 · 情侣款", date: "2026-10-25" },
+            { name: "阿杰", avatar: "🤝", rating: 5, text: "给好哥们买了默契中盒，他拆开笑疯了哈哈哈，友谊满格！性价比很高。", product: "默契中盒 · 朋友款", date: "2026-10-22" },
+            { name: "小鹿", avatar: "💗", rating: 4, text: "心动小盒很适合刚在一起的情侣，不贵但有心思，已经推荐给闺蜜了～", product: "心动小盒 · 情侣款", date: "2026-10-18" },
+            { name: "大林", avatar: "🤝", rating: 5, text: "友谊小盒当伴手礼太合适了！9.9元还能有这么多小玩意儿，同事们都说好。", product: "友谊小盒 · 朋友款", date: "2026-10-15" },
+            { name: "念念", avatar: "💗", rating: 5, text: "生日月买的，真的收到了隐藏款徽章！店家太有心了，感动哭。", product: "怦然中盒 · 情侣款", date: "2026-10-10" },
+            { name: "老周", avatar: "🤝", rating: 4, text: "挚友大盒分量很足，29.9花出了心意满满的感觉，朋友说这是他收到最特别的礼物。", product: "挚友大盒 · 朋友款", date: "2026-10-05" },
+        ];
+
+        function renderReviews() {
+            const grid = document.getElementById('reviewsGrid');
+            grid.innerHTML = reviews.map(r => `
+              <div class="card bg-white p-5 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center gap-3 mb-3">
+                  <span class="text-3xl">${r.avatar}</span>
+                  <div>
+                    <p class="font-bold">${r.name}</p>
+                    <p class="text-xs text-[var(--text-light)]">${r.date}</p>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  ${Array(5).fill(null).map((_, i) => i < r.rating ? '<span class="star">⭐</span>' : '<span class="star star-empty">☆</span>').join('')}
+                </div>
+                <p class="text-sm leading-relaxed mb-2">${r.text}</p>
+                <span class="text-xs text-[var(--text-light)] bg-gray-50 px-2 py-0.5 rounded-full">购买：${r.product}</span>
+              </div>
+            `).join("");
+        }
+
+        // ===== 初始化 =====
+        function init() {
+            // 先展示骨架屏
+            renderSkeleton();
+            // 模拟加载延迟后渲染真实内容
+            setTimeout(() => {
+                renderProducts();
+                renderReviews();
+            }, 600);
+
+            // 检查是否已领券
+            if (localStorage.getItem('couponClaimed') === 'true') {
+                couponClaimed = true;
+            } else {
+                showCouponModal();
+            }
+
+            // 购物车按钮点击提示
+            document.getElementById('cartBtn').addEventListener('click', () => {
+                if (cartCount === 0) {
+                    showToast('🛒 购物车空空如也，快去逛逛吧～');
+                } else {
+                    showToast(`🛒 购物车中有 ${cartCount} 件商品，结算功能开发中～`);
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
